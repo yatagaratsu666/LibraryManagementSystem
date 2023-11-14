@@ -11,7 +11,7 @@ The Library Management System is a Java-based application designed to manage boo
 ## Getting Started
 
 ### Prerequisites
-- Java JDK 11 or higher
+- Java JDK 17 or higher
 - Maven (for dependency management and running tests)
 
 ### Installing and Running
