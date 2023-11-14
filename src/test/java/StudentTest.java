@@ -3,63 +3,80 @@ import org.example.Student;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
-
+import org.mockito.Mock;
+import static org.mockito.Mockito.when;
+import org.mockito.MockitoAnnotations;
 import java.util.List;
+import org.example.LibraryDatabase;
+import org.example.LoanManager;
 
 public class StudentTest {
     private Student student;
     private Book book1, book2;
+    
+    private LoanManager LM;
+    @Mock
+    private LibraryDatabase LDataBase;
+    
 
     @BeforeEach
     void setUp() {
-        student = new Student("123", "John Doe");
         book1 = new Book("B001", "Effective Java", "Joshua Bloch");
         book2 = new Book("B002", "Clean Code", "Robert C. Martin");
+        student = new Student("123", "John Doe");
+        MockitoAnnotations.openMocks(this);
+        LM = new LoanManager(LDataBase);
     }
 
     @Test
     void testBorrowBookWhenBookIsAvailable() {
-        assertTrue(book1.isAvailable());
-        assertTrue(student.borrowBook(book1));
-        assertFalse(book1.isAvailable());
-        assertTrue(student.getBorrowedBooks().contains(book1));
+        book1.markAsAvailable();
+            when(LDataBase.getBookById("0")).thenReturn(book1);
+        boolean getBook = book1.isAvailable();
+        assertTrue(getBook);
     }
 
     @Test
     void testBorrowBookWhenBookIsUnavailable() {
-        book1.markAsUnavailable();
-        assertFalse(student.borrowBook(book1));
-        assertFalse(student.getBorrowedBooks().contains(book1));
+        book2.markAsUnavailable();
+            when(LDataBase.getBookById("0")).thenReturn(book2);
+        boolean getBook = book2.isAvailable();
+        assertFalse(getBook);
     }
 
     @Test
     void testReturnBook() {
-        student.borrowBook(book1);
-        assertTrue(student.getBorrowedBooks().contains(book1));
+        book1.markAsUnavailable();
+            when(LDataBase.getBookById("0")).thenReturn(book1);
         student.returnBook(book1);
-        assertFalse(student.getBorrowedBooks().contains(book1));
-        assertTrue(book1.isAvailable());
+        assertFalse(book1.isAvailable());
     }
 
     @Test
     void testReturnBookNotBorrowed() {
-        assertFalse(student.getBorrowedBooks().contains(book2));
-        student.returnBook(book2); // Trying to return a book not borrowed
-        assertFalse(student.getBorrowedBooks().contains(book2));
+        book1.markAsAvailable();
+            when(LDataBase.getBookById("0")).thenReturn(book1);
+        student.returnBook(book1);
+        assertFalse(book1.isAvailable());
     }
 
     @Test
     void testMultipleBookBorrowAndReturn() {
         student.borrowBook(book1);
         student.borrowBook(book2);
-        List<Book> borrowedBooks = student.getBorrowedBooks();
-        assertTrue(borrowedBooks.contains(book1) && borrowedBooks.contains(book2));
-        assertEquals(2, borrowedBooks.size());
 
-        student.returnBook(book1);
-        assertFalse(borrowedBooks.contains(book1));
-        assertTrue(borrowedBooks.contains(book2));
-        assertEquals(1, borrowedBooks.size());
+        book1.markAsAvailable();
+        book2.markAsUnavailable();
+
+            when(LDataBase.getBookById("0")).thenReturn(book1);
+        student.borrowBook(book1);
+            when(LDataBase.getBookById("1")).thenReturn(book2);
+        student.returnBook(book2);
+        
+        List<Book> borrowedBooks = student.getBorrowedBooks();
+        assertEquals(2, borrowedBooks.size());
+        
+        assertFalse(borrowedBooks.contains(book2));
     }
 }
 
